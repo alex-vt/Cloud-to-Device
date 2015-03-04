@@ -46,7 +46,7 @@ public class Files {
 
     public static String getLocalPath(FileEntry cloudFileEntry) {
         // todo string to constant
-        String path = cloudFileEntry.getPath().substring(1).replace("/.", "/[dot]");
+        String path = cloudFileEntry.getPath().substring(1);
         String timestamp = ".[" + getTimestamp(cloudFileEntry.getModified());
         String revision = " rev. " + cloudFileEntry.getRevision() + "]";
         String extension = getExtension(cloudFileEntry.getPath());
