@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
+
+    defaultConfig {
+        applicationId "com.oleksiykovtun.cloudtodevice"
+        minSdkVersion 16
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+def dropboxApiHttpPrefix = 'https://www.dropbox.com/developers/downloads/sdks/core/android/'
+def dropboxApiName = 'dropbox-android-sdk-1.6.3'
+
+// todo fix 1st build failure after clean
+task getDropboxApi(type: Copy) {
+
+    def dropboxApiFolder = new File('app/libs/' + dropboxApiName)
+    if (dropboxApiFolder.exists()) {
+        return
+    }
+
+    def dropboxApiZipFile = new File('app/libs/' + dropboxApiName + '.zip')
+    new URL(dropboxApiHttpPrefix + dropboxApiName + '.zip').withInputStream{
+        i -> dropboxApiZipFile.withOutputStream{ it << i }
+    }
+
+    from zipTree(new File('libs/' + dropboxApiName + '.zip'))
+    into new File('libs')
+}
+
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn(getDropboxApi)
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: [dropboxApiName + '/lib/*.jar'])
+    compile 'com.android.support:appcompat-v7:21.0.3'
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Cloud to Device</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="unlink">Unlink and exit</string>
+    <string name="clear">Clear</string>
+
+    <string name="service_started">Background Backup Service started</string>
+    <string name="service_stopped">Background Backup Service stopped</string>
+
+    <string name="tab_status">Status</string>
+    <string name="tab_log">Log</string>
+
+</resources>
