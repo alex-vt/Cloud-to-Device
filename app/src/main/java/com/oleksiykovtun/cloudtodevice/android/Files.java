@@ -24,8 +24,7 @@ public class Files {
     public static String getExtension(String filePath) {
         // todo string to constant
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-        return extension.isEmpty() ? ("") : ("." + extension);
+        return (fileName.lastIndexOf(".") < 0) ? "" : fileName.substring(fileName.lastIndexOf("."));
     }
 
     public static boolean fileExists(String containingFolderPath, FileEntry cloudFileEntry) {
