@@ -47,10 +47,10 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
                     Preferences.set(context, Preferences.STATUS, "Processed "
                             + String.format("%6d", counter)
                             + " of " + String.format("%6d", newCloudFileEntries.length)
-                            + "\nCopying from:\n" + fileEntry.getPath()
-                            + "\nTo:\n/" + Files.getLocalPath(fileEntry));
-                    Files.writeEntryToFile(CloudApi.get(context), fileEntry, Files.createFile(
-                            backupDirectoryPath, Files.getLocalPath(fileEntry)));
+                            + "\nCopying from: Dropbox\n" + fileEntry.getPath() + "\nTo: "
+                            + backupDirectoryPath + "\n" + Files.getLocalPath(fileEntry));
+                    Files.writeEntryToFile(CloudApi.get(context), fileEntry, backupDirectoryPath,
+                            Files.getLocalPath(fileEntry));
                 }
                 counter++;
             } catch (Exception e) {

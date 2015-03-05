@@ -4,6 +4,7 @@ import com.dropbox.client2.DropboxAPI;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
@@ -53,13 +54,19 @@ public class Files {
         return path + timestamp + revision + extension;
     }
 
-    public static void writeEntryToFile(DropboxAPI cloudApi, FileEntry fileEntry, File file)
-                                                                           throws Exception {
-        FileOutputStream outputStream = new FileOutputStream(file);
-        try {
-            cloudApi.getFile(fileEntry.getPath(), null, outputStream, null);
-        } finally {
-            outputStream.close();
+    private static FileOutputStream outputStream;
+
+    public static void writeEntryToFile(DropboxAPI cloudApi, FileEntry fileEntry,
+                                        String folder, String path) throws Exception {
+        // todo check security and string to constant
+        File tempFile = createFile(folder, "temp" + Preferences.APP_KEY);
+        outputStream = null;
+        outputStream = new FileOutputStream(tempFile);
+        cloudApi.getFile(fileEntry.getPath(), null, outputStream, null);
+        outputStream.flush();
+        outputStream.close();
+        if (! tempFile.renameTo(createFile(folder, path))) {
+            throw new IOException("File cannot be moved to:\n" + folder + path);
         }
     }
 
