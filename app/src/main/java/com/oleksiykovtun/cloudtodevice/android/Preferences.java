@@ -1,15 +1,17 @@
 package com.oleksiykovtun.cloudtodevice.android;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static android.content.Context.MODE_MULTI_PROCESS;
 
 /**
  * Preferences
@@ -49,11 +51,25 @@ public class Preferences {
         setReliably(context, tag, value);
     }
 
-    private static void setReliably(Context context, String tag, String value) {
-        ACCESS_LOCK.lock();
-        context.getSharedPreferences(EMPTY, MODE_MULTI_PROCESS).edit().putString(tag, value)
-                .apply();
-        ACCESS_LOCK.unlock();
+    private static void setReliably(final Context context, final String tag, final String value) {
+        new AsyncTask<String, String, String> () {
+
+            protected String doInBackground(String... inputs) {
+                ACCESS_LOCK.lock();
+                FileOutputStream outputStream;
+                try {
+                    outputStream = context.openFileOutput(tag, Context.MODE_PRIVATE);
+                    outputStream.write(value.getBytes());
+                    outputStream.close();
+                } catch (Exception e) {
+                    // todo string to constant
+                    Log.e(LOG, "SETTING SAVING FAILED: ", e);
+                }
+                ACCESS_LOCK.unlock();
+                return EMPTY;
+            }
+
+        }.doInBackground();
     }
 
     public static int getInt(Context context, String tag) {
@@ -62,7 +78,21 @@ public class Preferences {
 
     public static String get(Context context, String tag) {
         ACCESS_LOCK.lock();
-        String value = context.getSharedPreferences(EMPTY, MODE_MULTI_PROCESS).getString(tag, EMPTY);
+        FileInputStream inputStream;
+        String value = EMPTY;
+        try {
+            inputStream = context.openFileInput(tag);
+            int content;
+            while ((content = inputStream.read()) != -1) {
+                value = value + ((char) content);
+            }
+            inputStream.close();
+        } catch (FileNotFoundException e) {
+            value = EMPTY;
+        } catch (Exception e) {
+            // todo string to constant
+            Log.e(LOG, "SETTING LOADING FAILED: ", e);
+        }
         ACCESS_LOCK.unlock();
         return value;
     }
