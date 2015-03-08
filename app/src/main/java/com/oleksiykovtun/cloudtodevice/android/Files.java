@@ -17,6 +17,9 @@ import java.util.TreeSet;
  */
 public class Files {
 
+    public final static String PATHS_DELIMITER_REGEX = "( (?=/))";
+    public final static String EXTENSIONS_DELIMITER_REGEX = " ";
+
     private final static String DATE_DELIMITER = ".";
     private final static String TIME_DELIMITER = ":";
     private final static List<String> MONTHS = Arrays.asList(
@@ -70,22 +73,38 @@ public class Files {
         }
     }
 
-    public static Map.Entry<FileEntry[], String> getCloudChanges(DropboxAPI cloudApi,
-                                String cursor, List<String> excludedExtensions) throws Exception {
+    private static boolean pathStartsWith(String path, List<String> pathList) {
+        boolean result = false;
+        for (String pathFromList : pathList) {
+            if (path.startsWith(pathFromList)) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
+    private static boolean isEntryIncluded(DropboxAPI.DeltaEntry deltaEntry,
+                                    List<String> excludedPaths, List<String> excludedExtensions) {
+        return deltaEntry.metadata != null
+                && ! ((DropboxAPI.Entry)deltaEntry.metadata).isDir
+                && ! ((DropboxAPI.Entry)deltaEntry.metadata).isDeleted
+                && ! pathStartsWith(deltaEntry.lcPath, excludedPaths)
+                && ! excludedExtensions.contains(getExtension(deltaEntry.lcPath));
+    }
+
+    public static Map.Entry<FileEntry[], String> getCloudChanges(DropboxAPI cloudApi, String cursor,
+                    List<String> excludedPaths, List<String> excludedExtensions) throws Exception {
         Set<FileEntry> changedEntrySet = new TreeSet<>();
         DropboxAPI.DeltaPage<DropboxAPI.Entry> deltaPage;
         do {
             deltaPage = cloudApi.delta(cursor);
             cursor = deltaPage.cursor;
             for (DropboxAPI.DeltaEntry deltaEntry : deltaPage.entries) {
-                if (deltaEntry.metadata != null) {
-                    DropboxAPI.Entry entry = (DropboxAPI.Entry)deltaEntry.metadata;
-                    if (! entry.isDir && ! entry.isDeleted && ! excludedExtensions.contains(
-                            getExtension(deltaEntry.lcPath))) {
-                        // todo path filters
-                        changedEntrySet.add(new FileEntry(deltaEntry.lcPath,
-                                entry.modified, entry.rev));
-                    }
+                if (isEntryIncluded(deltaEntry, excludedPaths, excludedExtensions)) {
+                    changedEntrySet.add(new FileEntry(deltaEntry.lcPath,
+                            ((DropboxAPI.Entry)deltaEntry.metadata).modified,
+                            ((DropboxAPI.Entry)deltaEntry.metadata).rev));
                 }
             }
         } while (deltaPage.hasMore);

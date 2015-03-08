@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -27,9 +26,12 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         String cursor = Preferences.get(context, Preferences.CURSOR);
         FileEntry[] newCloudFileEntries = new FileEntry[] { };
         try {
-            Map.Entry<FileEntry[], String> cloudChanges
-                    = Files.getCloudChanges(CloudApi.get(context), cursor, Arrays.asList(
-                    Preferences.get(context, Preferences.EXCLUDED_EXTENSIONS).split(" ")));
+            Map.Entry<FileEntry[], String> cloudChanges = Files.getCloudChanges(
+                    CloudApi.get(context), cursor,
+                    Preferences.getStringList(context, Preferences.EXCLUDED_PATHS,
+                            Files.PATHS_DELIMITER_REGEX),
+                    Preferences.getStringList(context, Preferences.EXCLUDED_EXTENSIONS,
+                            Files.EXTENSIONS_DELIMITER_REGEX));
             newCloudFileEntries = cloudChanges.getKey();
             cursor = cloudChanges.getValue();
         } catch (Exception e) {

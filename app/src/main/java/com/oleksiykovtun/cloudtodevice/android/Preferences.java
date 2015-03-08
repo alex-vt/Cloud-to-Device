@@ -10,7 +10,9 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -25,6 +27,7 @@ public class Preferences {
     public static final String TOKEN = "token";
     public static final String CURSOR = "cursor";
     public static final String EXCLUDED_EXTENSIONS = "excludedExtensions";
+    public static final String EXCLUDED_PATHS = "excludedPaths";
     public static final String BACKUP_INTERVAL_SECONDS = "backupIntervalSeconds";
     public static final String UI_UPDATE_INTERVAL_MILLISECONDS = "uiUpdateIntervalMilliseconds";
 
@@ -74,6 +77,10 @@ public class Preferences {
 
     public static int getInt(Context context, String tag) {
         return Integer.parseInt(get(context, tag));
+    }
+
+    public static List<String> getStringList(Context context, String tag, String splitRegex) {
+        return Arrays.asList(get(context, tag).split(splitRegex));
     }
 
     public static String get(Context context, String tag) {

@@ -41,7 +41,6 @@ public class MainActivity extends Activity {
         Preferences.set(this, Preferences.STATUS, "Ready.");
         Preferences.set(this, Preferences.BACKUP_INTERVAL_SECONDS, "120");
         Preferences.set(this, Preferences.UI_UPDATE_INTERVAL_MILLISECONDS, "1000");
-        Preferences.set(this, Preferences.EXCLUDED_EXTENSIONS, ".mp3 .iso");
 
         setupButtons();
         runUpdateTimer();
