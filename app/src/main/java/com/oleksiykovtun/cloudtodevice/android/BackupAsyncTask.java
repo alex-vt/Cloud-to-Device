@@ -3,6 +3,7 @@ package com.oleksiykovtun.cloudtodevice.android;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.PowerManager;
 
 import java.util.Map;
 
@@ -12,11 +13,20 @@ import java.util.Map;
 public class BackupAsyncTask extends AsyncTask<String, String, String> {
 
     private Context context;
+    private PowerManager.WakeLock wakeLock;
 
     public BackupAsyncTask(Context context) {
         this.context = context;
     }
 
+    @Override
+    protected void onPreExecute() {
+        wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
+        wakeLock.acquire();
+    }
+
+    @Override
     protected String doInBackground(String... urls) {
         // todo string to xml
         String backupDirectoryPath = Environment.getExternalStorageDirectory() + "/" +
@@ -75,4 +85,8 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         return "";
     }
 
+    @Override
+    protected void onPostExecute (String result) {
+        wakeLock.release();
+    }
 }

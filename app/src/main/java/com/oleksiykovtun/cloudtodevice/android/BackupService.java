@@ -7,9 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 
@@ -21,9 +19,6 @@ public class BackupService extends Service  {
 
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = 1;
-    private BackupAsyncTask backupAsyncTask = null;
-    private CountDownTimer periodicBackupTimer;
-    private PowerManager.WakeLock wakeLock;
 
     private void showNotification() {
         NotificationCompat.Builder mBuilder =  new NotificationCompat.Builder(this)
@@ -44,27 +39,11 @@ public class BackupService extends Service  {
     public void onCreate() {
         // todo string to xml
         Preferences.prependLog(getApplicationContext(), "Service started.");
-        // todo string to xml
-        wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE))
-                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
-        wakeLock.acquire();
         // todo expose to AsyncTask
         showNotification();
         int backupIntervalMilliseconds = 1000 * Preferences.getInt(getApplicationContext(),
                 Preferences.BACKUP_INTERVAL_SECONDS);
-        periodicBackupTimer = new CountDownTimer(Integer.MAX_VALUE, backupIntervalMilliseconds) {
-
-            public void onTick(long millisUntilFinished) {
-                if (backupAsyncTask == null || backupAsyncTask.isCancelled()) {
-                    backupAsyncTask = null;
-                    backupAsyncTask = new BackupAsyncTask(getApplicationContext());
-                    backupAsyncTask.execute();
-                }
-            }
-
-            public void onFinish() { }
-
-        }.start();
+        BackupScheduler.startRepeated(this, backupIntervalMilliseconds);
     }
 
     @Override
@@ -72,10 +51,8 @@ public class BackupService extends Service  {
         super.onDestroy();
         // todo string to xml
         Preferences.prependLog(getApplicationContext(), "Service stopped.");
-        periodicBackupTimer.cancel();
-        wakeLock.release();
+        BackupScheduler.stop(this);
         notificationManager.cancel(NOTIFICATION_ID);
-        backupAsyncTask.cancel(true);
     }
 
     @Override
