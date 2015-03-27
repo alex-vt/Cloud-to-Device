@@ -26,10 +26,14 @@ public class Preferences {
     public static final String APP_SECRET = "APP_SECRET";
     public static final String TOKEN = "token";
     public static final String CURSOR = "cursor";
+    public static final String AUTO_START = "auto_start";
     public static final String EXCLUDED_EXTENSIONS = "excludedExtensions";
     public static final String EXCLUDED_PATHS = "excludedPaths";
     public static final String BACKUP_INTERVAL_SECONDS = "backupIntervalSeconds";
     public static final String UI_UPDATE_INTERVAL_MILLISECONDS = "uiUpdateIntervalMilliseconds";
+
+    public static final String TRUE = "true";
+    public static final String FALSE = "false";
 
     private static final String EMPTY = "";
     private static final ReentrantLock ACCESS_LOCK = new ReentrantLock();
@@ -38,8 +42,11 @@ public class Preferences {
         // todo string to xml
         String newWholeValue = new SimpleDateFormat("HH:mm:ss  ").format(new Date())
                 + value + "\n" + get(context, LOG);
+        // todo remove debug
+        if (newWholeValue.length() > 500) {
+            newWholeValue = newWholeValue.substring(0, 200);
+        }
         setReliably(context, LOG, newWholeValue);
-        // todo string to xml
         Log.d(LOG, "Writing shared preference: " + LOG + "\n" + value);
         set(context, STATUS, value);
     }
@@ -49,7 +56,6 @@ public class Preferences {
     }
 
     public static void set(Context context, String tag, String value) {
-        // todo string to xml
         Log.d(tag, "Writing shared preference: " + tag + "\n" + value);
         setReliably(context, tag, value);
     }
@@ -65,7 +71,6 @@ public class Preferences {
                     outputStream.write(value.getBytes());
                     outputStream.close();
                 } catch (Exception e) {
-                    // todo string to constant
                     Log.e(LOG, "SETTING SAVING FAILED: ", e);
                 }
                 ACCESS_LOCK.unlock();
@@ -97,7 +102,6 @@ public class Preferences {
         } catch (FileNotFoundException e) {
             value = EMPTY;
         } catch (Exception e) {
-            // todo string to constant
             Log.e(LOG, "SETTING LOADING FAILED: ", e);
         }
         ACCESS_LOCK.unlock();

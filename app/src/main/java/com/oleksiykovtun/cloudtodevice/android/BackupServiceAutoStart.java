@@ -11,8 +11,10 @@ public class BackupServiceAutoStart extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Intent service = new Intent(context, BackupService.class);
-        context.startService(service);
+        if (Preferences.get(context, Preferences.AUTO_START).equals(Preferences.TRUE)) {
+            Intent service = new Intent(context, BackupService.class);
+            context.startService(service);
+        }
     }
 
 }

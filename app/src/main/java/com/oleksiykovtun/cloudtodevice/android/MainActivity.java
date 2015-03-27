@@ -54,12 +54,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 startService(new Intent(v.getContext(), BackupService.class));
+                Preferences.set(getApplicationContext(), Preferences.AUTO_START, Preferences.TRUE);
             }
         });
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 stopService(new Intent(v.getContext(), BackupService.class));
+                Preferences.set(getApplicationContext(), Preferences.AUTO_START, Preferences.FALSE);
             }
         });
         final Button buttonClearLog = (Button) findViewById(R.id.button_clear_log);
@@ -75,6 +77,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 Preferences.reset(getApplicationContext(), Preferences.CURSOR);
                 Preferences.reset(getApplicationContext(), Preferences.TOKEN);
+                Preferences.set(getApplicationContext(), Preferences.AUTO_START, Preferences.FALSE);
                 stopService(new Intent(v.getContext(), BackupService.class));
                 finish();
             }
