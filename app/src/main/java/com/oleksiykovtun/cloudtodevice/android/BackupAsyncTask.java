@@ -19,6 +19,10 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         this.context = context;
     }
 
+    public boolean isRunningNow() {
+        return (getStatus() == Status.RUNNING) && (! isCancelled());
+    }
+
     @Override
     protected void onPreExecute() {
         wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
@@ -81,13 +85,16 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
             // todo string to xml
             Preferences.prependLog(context, "Processed " + counter + " files. Ready.");
         }
-        cancel(true);
-        // todo string to xml
         return "";
     }
 
     @Override
-    protected void onPostExecute (String result) {
+    protected void onPostExecute(String result) {
+        wakeLock.release();
+    }
+
+    @Override
+    protected void onCancelled(String result) {
         wakeLock.release();
     }
 

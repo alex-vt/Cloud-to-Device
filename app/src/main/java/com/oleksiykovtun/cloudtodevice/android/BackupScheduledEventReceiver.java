@@ -13,7 +13,7 @@ public class BackupScheduledEventReceiver extends WakefulBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (backupAsyncTask == null || backupAsyncTask.isCancelled()) {
+        if (backupAsyncTask == null || ! backupAsyncTask.isRunningNow()) {
             backupAsyncTask = new BackupAsyncTask(context);
             backupAsyncTask.execute();
         }
