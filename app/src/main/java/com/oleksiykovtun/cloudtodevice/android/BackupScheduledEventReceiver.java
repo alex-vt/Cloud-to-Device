@@ -5,18 +5,24 @@ import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 /**
- * Created by alx on 2015-03-17.
+ * BackupScheduledEventReceiver
  */
 public class BackupScheduledEventReceiver extends WakefulBroadcastReceiver {
 
-    private BackupAsyncTask backupAsyncTask = null;
+    private static BackupAsyncTask backupAsyncTask;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         if (backupAsyncTask == null || backupAsyncTask.isCancelled()) {
-            backupAsyncTask = null;
             backupAsyncTask = new BackupAsyncTask(context);
             backupAsyncTask.execute();
         }
     }
+
+    public static void abortReceiving() {
+        if (backupAsyncTask != null) {
+            backupAsyncTask.cancel(true);
+        }
+    }
+
 }

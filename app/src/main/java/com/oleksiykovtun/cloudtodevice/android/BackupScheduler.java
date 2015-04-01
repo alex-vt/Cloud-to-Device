@@ -16,6 +16,7 @@ public class BackupScheduler {
     }
 
     public static void stop(Context context) {
+        BackupScheduledEventReceiver.abortReceiving();
         getAlarmManager(context).cancel(getPendingIntent(context));
     }
 

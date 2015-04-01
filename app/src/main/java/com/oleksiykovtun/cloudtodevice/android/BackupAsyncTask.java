@@ -45,6 +45,7 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
             newCloudFileEntries = cloudChanges.getKey();
             cursor = cloudChanges.getValue();
         } catch (Exception e) {
+            cancel(true);
             // todo string to xml
             Preferences.processException(context, "Error while analyzing change: ", e);
         }
@@ -89,4 +90,5 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
     protected void onPostExecute (String result) {
         wakeLock.release();
     }
+
 }

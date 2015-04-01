@@ -23,7 +23,8 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".BackupScheduledEventReceiver" />
+        <receiver android:name=".BackupScheduledEventReceiver"
+            android:process=".BackgroundBackupService" />
 
         <activity
             android:name="com.oleksiykovtun.cloudtodevice.android.MainActivity"
