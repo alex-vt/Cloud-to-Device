@@ -11,18 +11,21 @@ import android.content.Intent;
 public class BackupScheduler {
 
     public static void startRepeated(Context context, int repeatTimeMilliseconds) {
-        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, BackupScheduledEventReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                repeatTimeMilliseconds, pendingIntent);
+        getAlarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                repeatTimeMilliseconds, getPendingIntent(context));
     }
 
     public static void stop(Context context) {
-        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        getAlarmManager(context).cancel(getPendingIntent(context));
+    }
+
+    private static PendingIntent getPendingIntent(Context context) {
         Intent intent = new Intent(context, BackupScheduledEventReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-        alarmManager.cancel(pendingIntent);
+        return PendingIntent.getBroadcast(context, 0, intent, 0);
+    }
+
+    private static AlarmManager getAlarmManager(Context context) {
+        return (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
     }
 
 }

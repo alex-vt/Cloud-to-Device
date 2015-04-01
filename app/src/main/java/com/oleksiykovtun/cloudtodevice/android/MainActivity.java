@@ -39,8 +39,8 @@ public class MainActivity extends Activity {
         Preferences.set(this, Preferences.APP_SECRET, APP_SECRET);
         // todo string to xml and ui settings
         Preferences.set(this, Preferences.STATUS, "Ready.");
-        Preferences.set(this, Preferences.BACKUP_INTERVAL_SECONDS, "120");
-        Preferences.set(this, Preferences.UI_UPDATE_INTERVAL_MILLISECONDS, "1000");
+        Preferences.set(this, Preferences.BACKUP_INTERVAL_SECONDS, 240);
+        Preferences.set(this, Preferences.UI_UPDATE_INTERVAL_MILLISECONDS, 1000);
 
         setupButtons();
         runUpdateTimer();
@@ -54,30 +54,30 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 startService(new Intent(v.getContext(), BackupService.class));
-                Preferences.set(getApplicationContext(), Preferences.AUTO_START, Preferences.TRUE);
+                Preferences.set(getApplicationContext(), Preferences.AUTO_START, true);
             }
         });
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 stopService(new Intent(v.getContext(), BackupService.class));
-                Preferences.set(getApplicationContext(), Preferences.AUTO_START, Preferences.FALSE);
+                Preferences.set(getApplicationContext(), Preferences.AUTO_START, false);
             }
         });
         final Button buttonClearLog = (Button) findViewById(R.id.button_clear_log);
         buttonClearLog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Preferences.reset(getApplicationContext(), Preferences.LOG);
+                Preferences.clear(getApplicationContext(), Preferences.LOG);
             }
         });
         final Button buttonUnlink = (Button) findViewById(R.id.button_unlink);
         buttonUnlink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Preferences.reset(getApplicationContext(), Preferences.CURSOR);
-                Preferences.reset(getApplicationContext(), Preferences.TOKEN);
-                Preferences.set(getApplicationContext(), Preferences.AUTO_START, Preferences.FALSE);
+                Preferences.clear(getApplicationContext(), Preferences.CURSOR);
+                Preferences.clear(getApplicationContext(), Preferences.TOKEN);
+                Preferences.set(getApplicationContext(), Preferences.AUTO_START, false);
                 stopService(new Intent(v.getContext(), BackupService.class));
                 finish();
             }

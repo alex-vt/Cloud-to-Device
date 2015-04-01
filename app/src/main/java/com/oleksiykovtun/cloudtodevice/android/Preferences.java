@@ -1,19 +1,14 @@
 package com.oleksiykovtun.cloudtodevice.android;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Preferences
@@ -32,56 +27,50 @@ public class Preferences {
     public static final String BACKUP_INTERVAL_SECONDS = "backupIntervalSeconds";
     public static final String UI_UPDATE_INTERVAL_MILLISECONDS = "uiUpdateIntervalMilliseconds";
 
-    public static final String TRUE = "true";
-    public static final String FALSE = "false";
-
-    private static final String EMPTY = "";
-    private static final ReentrantLock ACCESS_LOCK = new ReentrantLock();
+    public static void processException(Context context, String message, Throwable e) {
+        StringWriter stringWriter = new StringWriter();
+        e.printStackTrace(new PrintWriter(stringWriter));
+        message = message + "\n" + e.getMessage() + "\n" + stringWriter.toString();
+        Log.e(LOG, message);
+        prependLog(context, message);
+    }
 
     public static void prependLog(Context context, String value) {
-        // todo string to xml
-        String newWholeValue = new SimpleDateFormat("HH:mm:ss  ").format(new Date())
-                + value + "\n" + get(context, LOG);
+        final String dateFormat = "HH:mm:ss  ";
+        String newWholeValue = new SimpleDateFormat(dateFormat).format(new Date())
+                + value + "\n" + PreferencesReaderWriter.read(context, LOG);
         // todo remove debug
         if (newWholeValue.length() > 500) {
             newWholeValue = newWholeValue.substring(0, 200);
         }
-        setReliably(context, LOG, newWholeValue);
+        PreferencesReaderWriter.write(context, LOG, newWholeValue);
         Log.d(LOG, "Writing shared preference: " + LOG + "\n" + value);
         set(context, STATUS, value);
     }
 
-    public static void reset(Context context, String tag) {
-        setReliably(context, tag, EMPTY);
+    public static void clear(Context context, String tag) {
+        PreferencesReaderWriter.write(context, tag, "");
+    }
+
+    public static void set(Context context, String tag, int value) {
+        set(context, tag, "" + value);
+    }
+
+    public static void set(Context context, String tag, boolean value) {
+        set(context, tag, "" + value);
     }
 
     public static void set(Context context, String tag, String value) {
         Log.d(tag, "Writing shared preference: " + tag + "\n" + value);
-        setReliably(context, tag, value);
-    }
-
-    private static void setReliably(final Context context, final String tag, final String value) {
-        new AsyncTask<String, String, String> () {
-
-            protected String doInBackground(String... inputs) {
-                ACCESS_LOCK.lock();
-                FileOutputStream outputStream;
-                try {
-                    outputStream = context.openFileOutput(tag, Context.MODE_PRIVATE);
-                    outputStream.write(value.getBytes());
-                    outputStream.close();
-                } catch (Exception e) {
-                    Log.e(LOG, "SETTING SAVING FAILED: ", e);
-                }
-                ACCESS_LOCK.unlock();
-                return EMPTY;
-            }
-
-        }.doInBackground();
+        PreferencesReaderWriter.write(context, tag, value);
     }
 
     public static int getInt(Context context, String tag) {
         return Integer.parseInt(get(context, tag));
+    }
+
+    public static boolean getBoolean(Context context, String tag) {
+        return get(context, tag).equals("" + true);
     }
 
     public static List<String> getStringList(Context context, String tag, String splitRegex) {
@@ -89,32 +78,7 @@ public class Preferences {
     }
 
     public static String get(Context context, String tag) {
-        ACCESS_LOCK.lock();
-        FileInputStream inputStream;
-        String value = EMPTY;
-        try {
-            inputStream = context.openFileInput(tag);
-            int content;
-            while ((content = inputStream.read()) != -1) {
-                value = value + ((char) content);
-            }
-            inputStream.close();
-        } catch (FileNotFoundException e) {
-            value = EMPTY;
-        } catch (Exception e) {
-            Log.e(LOG, "SETTING LOADING FAILED: ", e);
-        }
-        ACCESS_LOCK.unlock();
-        return value;
-    }
-
-    public static void processException(Context context, String message, Throwable e) {
-        StringWriter stringWriter = new StringWriter();
-        e.printStackTrace(new PrintWriter(stringWriter));
-        // todo string to constant
-        message = message + "\n" + e.getMessage() + "\n" + stringWriter.toString();
-        Log.e(LOG, message);
-        prependLog(context, message);
+        return PreferencesReaderWriter.read(context, tag);
     }
 
 }
