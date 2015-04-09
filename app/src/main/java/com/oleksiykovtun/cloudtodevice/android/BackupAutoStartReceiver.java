@@ -7,13 +7,14 @@ import android.content.Intent;
 /**
  * BackupServiceAutoStart
  */
-public class BackupServiceAutoStart extends BroadcastReceiver {
+public class BackupAutoStartReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Preferences.getBoolean(context, Preferences.AUTO_START)) {
-            Intent service = new Intent(context, BackupService.class);
-            context.startService(service);
+            int backupIntervalMilliseconds = 1000 * Preferences.getInt(
+                    context.getApplicationContext(), Preferences.BACKUP_INTERVAL_SECONDS);
+            BackupScheduler.startRepeated(context, backupIntervalMilliseconds);
         }
     }
 

@@ -15,16 +15,13 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
 
-        <service android:name=".BackupService" android:process=".BackgroundBackupService" />
-
-        <receiver android:name=".BackupServiceAutoStart">
+        <receiver android:name=".BackupAutoStartReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".BackupScheduledEventReceiver"
-            android:process=".BackgroundBackupService" />
+        <receiver android:name=".BackupScheduledEventReceiver" />
 
         <activity
             android:name="com.oleksiykovtun.cloudtodevice.android.MainActivity"

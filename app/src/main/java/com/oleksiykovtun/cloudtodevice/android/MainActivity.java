@@ -1,9 +1,6 @@
 package com.oleksiykovtun.cloudtodevice.android;
 
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.Intent;
 import android.os.CountDownTimer;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
@@ -53,14 +50,16 @@ public class MainActivity extends Activity {
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startService(new Intent(v.getContext(), BackupService.class));
+                int backupIntervalMilliseconds = 1000 * Preferences.getInt(getApplicationContext(),
+                        Preferences.BACKUP_INTERVAL_SECONDS);
+                BackupScheduler.startRepeated(getApplicationContext(), backupIntervalMilliseconds);
                 Preferences.set(getApplicationContext(), Preferences.AUTO_START, true);
             }
         });
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(new Intent(v.getContext(), BackupService.class));
+                BackupScheduler.stop(getApplicationContext());
                 Preferences.set(getApplicationContext(), Preferences.AUTO_START, false);
             }
         });
@@ -78,7 +77,7 @@ public class MainActivity extends Activity {
                 Preferences.clear(getApplicationContext(), Preferences.CURSOR);
                 Preferences.clear(getApplicationContext(), Preferences.TOKEN);
                 Preferences.set(getApplicationContext(), Preferences.AUTO_START, false);
-                stopService(new Intent(v.getContext(), BackupService.class));
+                BackupScheduler.stop(getApplicationContext());
                 finish();
             }
         });
@@ -94,7 +93,8 @@ public class MainActivity extends Activity {
             public void onTick(long millisUntilFinished) {
                 setTextIfUpdated(statusTextView, Preferences.STATUS);
                 setTextIfUpdated(logTextView, Preferences.LOG);
-                setButtonsServiceRunning(buttonStart, buttonStop, isMyServiceRunning());
+                setButtonsServiceRunning(buttonStart, buttonStop,
+                        BackupScheduler.isScheduled(getApplicationContext()));
             }
 
             // todo extract to AsyncTask
@@ -113,18 +113,6 @@ public class MainActivity extends Activity {
     private void setButtonsServiceRunning(Button buttonStart, Button buttonStop, boolean running) {
         buttonStart.setEnabled(! running);
         buttonStop.setEnabled(running);
-    }
-
-    private boolean isMyServiceRunning() {
-        Class<?> targetClass = BackupService.class;
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service
-                : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (targetClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     protected void onResume() {
