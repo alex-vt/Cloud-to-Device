@@ -37,7 +37,9 @@ public class MainActivity extends Activity {
         // todo string to xml and ui settings
         Preferences.set(this, Preferences.STATUS, "Ready.");
         Preferences.set(this, Preferences.BACKUP_INTERVAL_SECONDS, 240);
-        Preferences.set(this, Preferences.UI_UPDATE_INTERVAL_MILLISECONDS, 1000);
+        Preferences.set(this, Preferences.UI_UPDATE_INTERVAL_MILLIS, 1000);
+        Preferences.set(this, Preferences.NETWORK_TIMEOUT_MILLIS, 30000);
+        Preferences.set(this, Preferences.NETWORK_CHECK_INTERVAL_MILLIS, 3000);
 
         setupButtons();
         runUpdateTimer();
@@ -88,7 +90,7 @@ public class MainActivity extends Activity {
             timer.cancel();
         }
         timer = new CountDownTimer(Integer.MAX_VALUE, Preferences.getInt(getApplicationContext(),
-                Preferences.UI_UPDATE_INTERVAL_MILLISECONDS)) {
+                Preferences.UI_UPDATE_INTERVAL_MILLIS)) {
 
             public void onTick(long millisUntilFinished) {
                 setTextIfUpdated(statusTextView, Preferences.STATUS);

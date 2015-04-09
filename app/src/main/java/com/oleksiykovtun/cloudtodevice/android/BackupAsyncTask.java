@@ -1,6 +1,8 @@
 package com.oleksiykovtun.cloudtodevice.android;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -45,6 +47,8 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         String cursor = Preferences.get(context, Preferences.CURSOR);
         FileEntry[] newCloudFileEntries = new FileEntry[] { };
         try {
+            waitForNetwork(Preferences.getInt(context, Preferences.NETWORK_CHECK_INTERVAL_MILLIS),
+                    Preferences.getInt(context, Preferences.NETWORK_TIMEOUT_MILLIS));
             Map.Entry<FileEntry[], String> cloudChanges = Files.getCloudChanges(
                     CloudApi.get(context), cursor,
                     Preferences.getStringList(context, Preferences.EXCLUDED_PATHS,
@@ -103,6 +107,19 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
     protected void onCancelled(String result) {
         wifiLock.release();
         wakeLock.release();
+    }
+
+    private void waitForNetwork(int checkIntervalMillis, int timeoutMillis) throws Exception {
+        for (int i = 0; i < timeoutMillis; i += checkIntervalMillis) {
+            NetworkInfo activeNetworkInfo = ((ConnectivityManager)context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                return;
+            }
+            Thread.sleep(checkIntervalMillis);
+        }
+        // todo string to xml
+        throw new Exception("Cannot connect to the internet");
     }
 
 }

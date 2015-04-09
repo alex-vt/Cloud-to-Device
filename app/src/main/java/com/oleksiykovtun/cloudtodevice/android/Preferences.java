@@ -25,7 +25,9 @@ public class Preferences {
     public static final String EXCLUDED_EXTENSIONS = "excludedExtensions";
     public static final String EXCLUDED_PATHS = "excludedPaths";
     public static final String BACKUP_INTERVAL_SECONDS = "backupIntervalSeconds";
-    public static final String UI_UPDATE_INTERVAL_MILLISECONDS = "uiUpdateIntervalMilliseconds";
+    public static final String UI_UPDATE_INTERVAL_MILLIS = "uiUpdateIntervalMillis";
+    public static final String NETWORK_CHECK_INTERVAL_MILLIS = "networkCheckIntervalMillis";
+    public static final String NETWORK_TIMEOUT_MILLIS = "networkTimeoutMillis";
 
     public static void processException(Context context, String message, Throwable e) {
         StringWriter stringWriter = new StringWriter();
