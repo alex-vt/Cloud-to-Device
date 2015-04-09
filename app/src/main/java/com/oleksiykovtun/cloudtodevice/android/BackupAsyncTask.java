@@ -1,6 +1,7 @@
 package com.oleksiykovtun.cloudtodevice.android;
 
 import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.PowerManager;
@@ -14,6 +15,7 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
 
     private Context context;
     private PowerManager.WakeLock wakeLock;
+    private WifiManager.WifiLock wifiLock;
 
     public BackupAsyncTask(Context context) {
         this.context = context;
@@ -28,6 +30,9 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
         wakeLock.acquire();
+        wifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
+                .createWifiLock(WifiManager.WIFI_MODE_FULL, "");
+        wifiLock.acquire();
     }
 
     @Override
@@ -90,11 +95,13 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
 
     @Override
     protected void onPostExecute(String result) {
+        wifiLock.release();
         wakeLock.release();
     }
 
     @Override
     protected void onCancelled(String result) {
+        wifiLock.release();
         wakeLock.release();
     }
 
