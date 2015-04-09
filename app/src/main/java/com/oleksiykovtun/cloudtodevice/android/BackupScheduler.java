@@ -13,7 +13,6 @@ import android.support.v4.app.TaskStackBuilder;
  */
 public class BackupScheduler {
 
-    private static NotificationManager notificationManager = null;
     private static final int NOTIFICATION_ID = 1;
 
     public static void startRepeated(Context context, int repeatTimeMilliseconds) {
@@ -25,7 +24,7 @@ public class BackupScheduler {
     public static void stop(Context context) {
         BackupScheduledEventReceiver.abortReceiving();
         getAlarmManager(context).cancel(getPendingIntent(context));
-        hideNotification();
+        hideNotification(context);
     }
 
     public static boolean isScheduled(Context context) {
@@ -50,15 +49,15 @@ public class BackupScheduler {
         PendingIntent resultPendingIntent
                 = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
         mBuilder.setContentIntent(resultPendingIntent);
-        notificationManager
-                = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+        getNotificationManager(context).notify(NOTIFICATION_ID, mBuilder.build());
     }
 
-    private static void hideNotification() {
-        if (notificationManager != null) {
-            notificationManager.cancel(NOTIFICATION_ID);
-        }
+    private static void hideNotification(Context context) {
+        getNotificationManager(context).cancel(NOTIFICATION_ID);
+    }
+
+    private static NotificationManager getNotificationManager(Context context) {
+        return (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
 }
