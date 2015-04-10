@@ -17,8 +17,7 @@ import java.util.TreeSet;
  */
 public class Files {
 
-    public final static String PATHS_DELIMITER_REGEX = "( (?=/))";
-    public final static String EXTENSIONS_DELIMITER_REGEX = " ";
+    public final static String PATTERNS_DELIMITER_REGEX = "( (?=[/*]))";
 
     private final static String DATE_DELIMITER = ".";
     private final static String TIME_DELIMITER = ":";
@@ -73,10 +72,17 @@ public class Files {
         }
     }
 
-    private static boolean pathStartsWith(String path, List<String> pathList) {
+    private static boolean pathMatchesAnyPattern(String path, List<String> rawPathPatternList) {
+        final String rawPathFixedPartRegex =  "[^*]+";
+        final String rawPathArbitraryPartRegex =  "[*]+";
+        final String pathFixedPartRegex =  "\\\\Q$0\\\\E";
+        final String pathArbitraryPartRegex =  ".+";
         boolean result = false;
-        for (String pathFromList : pathList) {
-            if (path.startsWith(pathFromList)) {
+        for (String rawPathPattern : rawPathPatternList) {
+            String pathPatternRegex = rawPathPattern.trim()
+                    .replaceAll(rawPathFixedPartRegex, pathFixedPartRegex)
+                    .replaceAll(rawPathArbitraryPartRegex, pathArbitraryPartRegex);
+            if (path.matches(pathPatternRegex)) {
                 result = true;
                 break;
             }
@@ -85,23 +91,22 @@ public class Files {
     }
 
     private static boolean isEntryIncluded(DropboxAPI.DeltaEntry deltaEntry,
-                                    List<String> excludedPaths, List<String> excludedExtensions) {
+                                    List<String> excludedPatterns) {
         return deltaEntry.metadata != null
                 && ! ((DropboxAPI.Entry)deltaEntry.metadata).isDir
                 && ! ((DropboxAPI.Entry)deltaEntry.metadata).isDeleted
-                && ! pathStartsWith(deltaEntry.lcPath, excludedPaths)
-                && ! excludedExtensions.contains(getExtension(deltaEntry.lcPath));
+                && ! pathMatchesAnyPattern(deltaEntry.lcPath, excludedPatterns);
     }
 
     public static Map.Entry<FileEntry[], String> getCloudChanges(DropboxAPI cloudApi, String cursor,
-                    List<String> excludedPaths, List<String> excludedExtensions) throws Exception {
+                    List<String> excludedPatterns) throws Exception {
         Set<FileEntry> changedEntrySet = new TreeSet<>();
         DropboxAPI.DeltaPage<DropboxAPI.Entry> deltaPage;
         do {
             deltaPage = cloudApi.delta(cursor);
             cursor = deltaPage.cursor;
             for (DropboxAPI.DeltaEntry deltaEntry : deltaPage.entries) {
-                if (isEntryIncluded(deltaEntry, excludedPaths, excludedExtensions)) {
+                if (isEntryIncluded(deltaEntry, excludedPatterns)) {
                     changedEntrySet.add(new FileEntry(deltaEntry.lcPath,
                             ((DropboxAPI.Entry)deltaEntry.metadata).modified,
                             ((DropboxAPI.Entry)deltaEntry.metadata).rev));

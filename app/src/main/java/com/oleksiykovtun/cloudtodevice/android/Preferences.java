@@ -22,8 +22,7 @@ public class Preferences {
     public static final String TOKEN = "token";
     public static final String CURSOR = "cursor";
     public static final String AUTO_START = "auto_start";
-    public static final String EXCLUDED_EXTENSIONS = "excludedExtensions";
-    public static final String EXCLUDED_PATHS = "excludedPaths";
+    public static final String EXCLUDED_PATTERNS = "excludedPatterns";
     public static final String BACKUP_INTERVAL_SECONDS = "backupIntervalSeconds";
     public static final String UI_UPDATE_INTERVAL_MILLIS = "uiUpdateIntervalMillis";
     public static final String NETWORK_CHECK_INTERVAL_MILLIS = "networkCheckIntervalMillis";
@@ -76,7 +75,7 @@ public class Preferences {
     }
 
     public static List<String> getStringList(Context context, String tag, String splitRegex) {
-        return Arrays.asList(get(context, tag).split(splitRegex));
+        return Arrays.asList(get(context, tag).trim().split(splitRegex));
     }
 
     public static String get(Context context, String tag) {

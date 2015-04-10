@@ -51,10 +51,8 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
                     Preferences.getInt(context, Preferences.NETWORK_TIMEOUT_MILLIS));
             Map.Entry<FileEntry[], String> cloudChanges = Files.getCloudChanges(
                     CloudApi.get(context), cursor,
-                    Preferences.getStringList(context, Preferences.EXCLUDED_PATHS,
-                            Files.PATHS_DELIMITER_REGEX),
-                    Preferences.getStringList(context, Preferences.EXCLUDED_EXTENSIONS,
-                            Files.EXTENSIONS_DELIMITER_REGEX));
+                    Preferences.getStringList(context, Preferences.EXCLUDED_PATTERNS,
+                            Files.PATTERNS_DELIMITER_REGEX));
             newCloudFileEntries = cloudChanges.getKey();
             cursor = cloudChanges.getValue();
         } catch (Exception e) {
