@@ -9,8 +9,19 @@
     <string name="unlink">Unlink and exit</string>
     <string name="clear">Clear</string>
 
-    <string name="service_started">Background Backup Service started</string>
-    <string name="service_stopped">Background Backup Service stopped</string>
+    <string name="message_started_backup">Started backup...</string>
+    <string name="message_copying_from">Copying from:</string>
+    <string name="message_copying_to">To:</string>
+    <string name="message_aborted_saved">Aborted backup. Saved</string>
+    <string name="message_files_of">files of</string>
+    <string name="message_processed">Processed</string>
+    <string name="message_files_ready">files. Ready.</string>
+
+    <string name="error_connect_internet">Cannot connect to the internet</string>
+    <string name="error_analyzing_changes">Error when analyzing changes in cloud</string>
+    <string name="error_writing_file">Error when writing file</string>
+
+    <string name="path_backup_directory_in_external_storage">Cloud-to-Device</string>
 
     <string name="tab_status">Status</string>
     <string name="tab_log">Log</string>

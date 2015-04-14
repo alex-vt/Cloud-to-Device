@@ -11,6 +11,8 @@ import com.dropbox.client2.session.AppKeyPair;
  */
 public class CloudApi {
 
+    private final static String NAME = "Dropbox";
+
     public static void authenticate(Context context) {
         if (Preferences.get(context, Preferences.TOKEN).isEmpty()) {
             get(context).getSession().startOAuth2Authentication(context);
@@ -38,6 +40,10 @@ public class CloudApi {
             // todo string to xml
             Preferences.processException(context, "Authentication failed: ", e);
         }
+    }
+
+    public static String getName() {
+        return NAME;
     }
 
 }

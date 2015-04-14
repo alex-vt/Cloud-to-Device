@@ -15,9 +15,12 @@ import java.util.Map;
  */
 public class BackupAsyncTask extends AsyncTask<String, String, String> {
 
+    private static final String FILE_COUNT_FORMAT = "%6d";
+
     private Context context;
     private PowerManager.WakeLock wakeLock;
     private WifiManager.WifiLock wifiLock;
+    private String cloudChangesCursor = null;
 
     public BackupAsyncTask(Context context) {
         this.context = context;
@@ -27,8 +30,39 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         return (getStatus() == Status.RUNNING) && (! isCancelled());
     }
 
+
     @Override
     protected void onPreExecute() {
+        acquireLocks();
+    }
+
+    @Override
+    protected String doInBackground(String... urls) {
+        Preferences.prependLog(context, getText(R.string.message_started_backup));
+        waitForNetwork(Preferences.getInt(context, Preferences.NETWORK_CHECK_INTERVAL_MILLIS),
+                    Preferences.getInt(context, Preferences.NETWORK_TIMEOUT_MILLIS));
+        cloudChangesCursor = Preferences.get(context, Preferences.CURSOR);
+
+        String backupDirectoryPath = getBackupDirectoryPath();
+        FileEntry[] newCloudFileEntries = getNewFileEntriesFromCloud();
+        int counter = writeNewFilesToBackupDirectory(backupDirectoryPath, newCloudFileEntries);
+
+        finishBackupTask(newCloudFileEntries, counter);
+        return "";
+    }
+
+    @Override
+    protected void onPostExecute(String result) {
+        releaseLocks();
+    }
+
+    @Override
+    protected void onCancelled(String result) {
+        releaseLocks();
+    }
+
+
+    private void acquireLocks() {
         wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
         wakeLock.acquire();
@@ -37,87 +71,99 @@ public class BackupAsyncTask extends AsyncTask<String, String, String> {
         wifiLock.acquire();
     }
 
-    @Override
-    protected String doInBackground(String... urls) {
-        // todo string to xml
-        String backupDirectoryPath = Environment.getExternalStorageDirectory() + "/" +
-                "Cloud-to-Device" + "/";
-        // todo string to xml
-        Preferences.prependLog(context, "Started backup...");
-        String cursor = Preferences.get(context, Preferences.CURSOR);
-        FileEntry[] newCloudFileEntries = new FileEntry[] { };
+    private void waitForNetwork(int checkIntervalMillis, int timeoutMillis) {
         try {
-            waitForNetwork(Preferences.getInt(context, Preferences.NETWORK_CHECK_INTERVAL_MILLIS),
-                    Preferences.getInt(context, Preferences.NETWORK_TIMEOUT_MILLIS));
-            Map.Entry<FileEntry[], String> cloudChanges = Files.getCloudChanges(
-                    CloudApi.get(context), cursor,
+            for (int i = 0; i < timeoutMillis; i += checkIntervalMillis) {
+                NetworkInfo activeNetworkInfo = ((ConnectivityManager) context
+                        .getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+                if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                    return;
+                }
+                Thread.sleep(checkIntervalMillis);
+            }
+            throw new Exception(getText(R.string.error_connect_internet));
+        }
+        catch (Exception e) {
+            cancel(true);
+            Preferences.processException(context, getText(R.string.error_connect_internet), e);
+        }
+    }
+
+    private String getBackupDirectoryPath() {
+        return Environment.getExternalStorageDirectory() + "/"
+                + getText(R.string.path_backup_directory_in_external_storage);
+    }
+
+    private FileEntry[] getNewFileEntriesFromCloud() {
+        FileEntry[] newFileEntriesFromCloud = new FileEntry[] { };
+        try {
+            Map.Entry<FileEntry[], String> cloudChangesMapEntry
+                    = Files.getCloudChanges(CloudApi.get(context), cloudChangesCursor,
                     Preferences.getStringList(context, Preferences.EXCLUDED_PATTERNS,
                             Files.PATTERNS_DELIMITER_REGEX));
-            newCloudFileEntries = cloudChanges.getKey();
-            cursor = cloudChanges.getValue();
+            newFileEntriesFromCloud = cloudChangesMapEntry.getKey();
+            cloudChangesCursor = cloudChangesMapEntry.getValue();
         } catch (Exception e) {
             cancel(true);
-            // todo string to xml
-            Preferences.processException(context, "Error while analyzing change: ", e);
+            Preferences.processException(context, getText(R.string.error_analyzing_changes), e);
         }
-        int counter = 0;
-        for (FileEntry fileEntry : newCloudFileEntries) {
+        return newFileEntriesFromCloud;
+    }
+
+    private int writeNewFilesToBackupDirectory(String backupDirectoryPath,
+                                               FileEntry[] newFileEntriesFromCloud) {
+        int writtenFileCounter = 0;
+        for (FileEntry fileEntry : newFileEntriesFromCloud) {
             if (isCancelled()) {
                 break;
             }
             try {
                 if (! Files.fileExists(backupDirectoryPath, fileEntry)) {
-                    // todo string to xml
-                    Preferences.set(context, Preferences.STATUS, "Processed "
-                            + String.format("%6d", counter)
-                            + " of " + String.format("%6d", newCloudFileEntries.length)
-                            + "\nCopying from: Dropbox\n" + fileEntry.getPath() + "\nTo: "
-                            + backupDirectoryPath + "\n" + Files.getLocalPath(fileEntry));
+                    Preferences.set(context, Preferences.STATUS,
+                            getText(R.string.message_processed) + " "
+                                + String.format(FILE_COUNT_FORMAT, writtenFileCounter) + " "
+                                + getText(R.string.message_files_of) + " "
+                                + String.format(FILE_COUNT_FORMAT, newFileEntriesFromCloud.length) + "\n"
+                                + getText(R.string.message_copying_from) + " "
+                                + CloudApi.getName() + "\n"
+                                + fileEntry.getPath() + "\n"
+                                + getText(R.string.message_copying_to) + " "
+                                + backupDirectoryPath + "\n"
+                                + "/" + Files.getLocalPath(fileEntry));
                     Files.writeEntryToFile(CloudApi.get(context), fileEntry, backupDirectoryPath,
                             Files.getLocalPath(fileEntry));
                 }
-                counter++;
+                writtenFileCounter++;
             } catch (Exception e) {
                 cancel(true);
-                // todo string to xml
-                Preferences.processException(context, "Error while writing file: ", e);
+                Preferences.processException(context, getText(R.string.error_writing_file), e);
             }
         }
+        return writtenFileCounter;
+    }
+
+    private void finishBackupTask(FileEntry[] newFileEntriesFromCloud, int writtenFileCounter) {
         if (isCancelled()) {
-            // todo string to xml
-            Preferences.prependLog(context, "Aborted backup. Saved " + String.format("%6d", counter)
-                    + " files of " + newCloudFileEntries.length);
+            Preferences.prependLog(context, getText(R.string.message_aborted_saved) + " "
+                    + String.format(FILE_COUNT_FORMAT, writtenFileCounter) + " "
+                    + getText(R.string.message_files_of) + " "
+                    + newFileEntriesFromCloud.length);
         } else {
-            Preferences.set(context, Preferences.CURSOR, cursor);
-            // todo string to xml
-            Preferences.prependLog(context, "Processed " + counter + " files. Ready.");
+            Preferences.set(context, Preferences.CURSOR, cloudChangesCursor);
+            Preferences.prependLog(context, getText(R.string.message_processed) + " "
+                    + writtenFileCounter + " "
+                    + getText(R.string.message_files_ready));
         }
-        return "";
     }
 
-    @Override
-    protected void onPostExecute(String result) {
+    private void releaseLocks() {
         wifiLock.release();
         wakeLock.release();
     }
 
-    @Override
-    protected void onCancelled(String result) {
-        wifiLock.release();
-        wakeLock.release();
-    }
 
-    private void waitForNetwork(int checkIntervalMillis, int timeoutMillis) throws Exception {
-        for (int i = 0; i < timeoutMillis; i += checkIntervalMillis) {
-            NetworkInfo activeNetworkInfo = ((ConnectivityManager)context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
-                return;
-            }
-            Thread.sleep(checkIntervalMillis);
-        }
-        // todo string to xml
-        throw new Exception("Cannot connect to the internet");
+    private String getText(int stringResourceId) {
+        return context.getResources().getString(stringResourceId);
     }
 
 }
