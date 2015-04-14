@@ -21,6 +21,7 @@ public class Files {
 
     private final static String DATE_DELIMITER = ".";
     private final static String TIME_DELIMITER = ":";
+    private final static String TIME_UTC = "UTC";
     private final static List<String> MONTHS = Arrays.asList(
             "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
@@ -42,9 +43,8 @@ public class Files {
         String hour = timestamp.substring(17, 19);
         String minute = timestamp.substring(20, 22);
         String second = timestamp.substring(23, 25);
-        // todo string to constant
         return year + DATE_DELIMITER + month + DATE_DELIMITER + day + " "
-                + hour + TIME_DELIMITER + minute + TIME_DELIMITER + second;
+                + hour + TIME_DELIMITER + minute + TIME_DELIMITER + second + " " + TIME_UTC;
     }
 
     public static String getLocalPath(FileEntry cloudFileEntry) {
